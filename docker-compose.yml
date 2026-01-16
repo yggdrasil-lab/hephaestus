@@ -17,10 +17,10 @@ services:
         - "traefik.http.services.registry.loadbalancer.server.port=5000"
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
-      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWORIGIN: '[https://registry-ui.${DOMAIN_NAME}]'
-      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWMETHODS: '[HEAD,GET,OPTIONS,DELETE]'
-      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWHEADERS: '[Authorization,Accept,Cache-Control]'
-      REGISTRY_HTTP_HEADERS_ACCESSCONTROLEXPOSEHEADERS: '[Docker-Content-Digest]'
+      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWORIGIN: https://registry-ui.${DOMAIN_NAME}
+      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWMETHODS: HEAD,GET,OPTIONS,DELETE
+      REGISTRY_HTTP_HEADERS_ACCESSCONTROLALLOWHEADERS: Authorization,Accept,Cache-Control
+      REGISTRY_HTTP_HEADERS_ACCESSCONTROLEXPOSEHEADERS: Docker-Content-Digest
     volumes:
       - /mnt/storage/registry:/var/lib/registry
     networks:
