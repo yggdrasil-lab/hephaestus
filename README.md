@@ -53,6 +53,9 @@ Ensure the storage directory exists on the host (Manager Node):
     *   *Proxy*: Forwards API requests to `http://registry:5000`.
 
 ## Troubleshooting
+*   **UI Nginx Error "host not found in upstream"**:
+    *   This occurs if the internal Nginx proxy tries to resolve the `registry` hostname before the container is fully available in Swarm DNS.
+    *   **Fix**: Ensure `NGINX_RESOLVER=127.0.0.11` is set in the environment variables. This forces Nginx to use the Docker embedded DNS resolver at runtime.
 *   **Pushing Images**:
     To push images, you can still access the registry directly if you expose it, or use the internal service name `registry:5000` from within the cluster.
     ```bash
