@@ -25,8 +25,8 @@ services:
       - "traefik.http.routers.registry.entrypoints=websecure"
       - "traefik.http.routers.registry.tls=true"
       - "traefik.http.services.registry.loadbalancer.server.port=5000"
-      # Security (Authelia)
-      - "traefik.http.routers.registry.middlewares=authelia@docker"
+      - "traefik.docker.network=aether-net"
+
 
   registry-ui:
     image: joxit/docker-registry-ui:main
@@ -51,6 +51,7 @@ services:
       - "traefik.http.routers.registry-ui.entrypoints=websecure"
       - "traefik.http.routers.registry-ui.tls=true"
       - "traefik.http.services.registry-ui.loadbalancer.server.port=80"
+      - "traefik.docker.network=aether-net"
       # Security (Authelia)
       - "traefik.http.routers.registry-ui.middlewares=authelia@docker"
 
