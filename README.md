@@ -17,16 +17,17 @@ To establish a self-hosted, sovereign software supply chain. I provide the Docke
 
 ## Architecture
 1.  **Registry Backend**:
-    *   **Internal URL**: `http://registry:5000` (Swarm Network) or `https://registry.<DOMAIN_NAME>` (Traefik Loopback).
-    *   **No Auth**: Currently configured for internal trust. Relies on Network isolation and Split-DNS.
-    *   **CORS**: Configured via Traefik Middleware to allow `registry-ui` to access it.
+    *   **Internal URL**: `http://registry:5000` (Swarm Network).
+    *   **No Auth**: Configured for internal trust (Network isolation).
+    *   **Proxy**: Accessed via `registry-ui` (which acts as a reverse proxy).
 2.  **Registry UI**:
     *   **External URL**: `https://registry-ui.<DOMAIN_NAME>`
-    *   **Security**: Protected by **Authelia** (Single Sign-On). Only authenticated users can browse or delete images.
+    *   **Security**: Protected by **Authelia** (Single Sign-On).
+    *   **Function**: Acts as both UI and API Proxy (via `NGINX_PROXY_PASS_URL`).
 
 ## Prerequisites
 *   Docker Swarm Cluster
-*   Traefik Proxy (External) & Authelia (Optional but recommended for UI)
+*   Traefik Proxy (External) & Authelia
 *   `ops-scripts` submodule initialized.
 
 ## Setup Instructions
@@ -38,8 +39,6 @@ Ensure the storage directory exists on the host (Manager Node):
 ```
 
 ### 2. Deployment
-Because this stack uses Traefik middleware for CORS, ensure your Traefik instance is up and running.
-
 ```bash
 ./scripts/deploy.sh "hephaestus" docker-compose.yml
 ```
@@ -47,17 +46,16 @@ Because this stack uses Traefik middleware for CORS, ensure your Traefik instanc
 ## Services
 *   **registry**: The backend distribution server (v2).
     *   *Storage*: `/mnt/storage/registry` (Host Bind Mount).
-    *   *Network*: `aether-net` (Public/Swarm), `internal` (Backend).
-    *   *Port*: 5000.
+    *   *Network*: `aether-net`, `internal`.
 *   **registry-ui**: The frontend interface by `joxit`.
-    *   *Network*: `aether-net`.
+    *   *Network*: `aether-net`, `internal` (to reach registry).
     *   *Auth*: Middleware `authelia@docker`.
+    *   *Proxy*: Forwards API requests to `http://registry:5000`.
 
 ## Troubleshooting
-*   **CORS Errors in UI**: If you see "Access-Control-Allow-Origin" errors, ensure the Traefik Middleware `registry-cors` is correctly applied to the `registry` router.
 *   **Pushing Images**:
+    To push images, you can still access the registry directly if you expose it, or use the internal service name `registry:5000` from within the cluster.
     ```bash
     docker tag my-image registry.<DOMAIN_NAME>/my-image:latest
     docker push registry.<DOMAIN_NAME>/my-image:latest
     ```
-    *Note: If pushing from outside the cluster, ensure DNS resolves to your Traefik IP.*

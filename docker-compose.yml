@@ -16,13 +16,6 @@ services:
         - "traefik.http.routers.registry.tls=true"
         - "traefik.http.services.registry.loadbalancer.server.port=5000"
         - "traefik.docker.network=aether-net"
-        # CORS Middleware
-        - "traefik.http.middlewares.registry-cors.headers.accesscontrolallowmethods=GET,HEAD,PUT,POST,DELETE,OPTIONS"
-        - "traefik.http.middlewares.registry-cors.headers.accesscontrolallowheaders=*"
-        - "traefik.http.middlewares.registry-cors.headers.accesscontrolalloworiginlist=https://registry-ui.${DOMAIN_NAME}"
-        - "traefik.http.middlewares.registry-cors.headers.accesscontrolmaxage=100"
-        - "traefik.http.middlewares.registry-cors.headers.addvaryheader=true"
-        - "traefik.http.routers.registry.middlewares=registry-cors"
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
     volumes:
@@ -48,14 +41,16 @@ services:
         - "traefik.http.routers.registry-ui.entrypoints=websecure"
         - "traefik.http.routers.registry-ui.tls=true"
         - "traefik.http.services.registry-ui.loadbalancer.server.port=80"
+        - "traefik.docker.network=aether-net"
         - "traefik.http.routers.registry-ui.middlewares=authelia@docker"
     environment:
       - REGISTRY_TITLE=Hephaestus Registry
-      - REGISTRY_URL=https://registry.${DOMAIN_NAME}
+      - NGINX_PROXY_PASS_URL=http://registry:5000
       - SINGLE_REGISTRY=true
       - DELETE_IMAGES=true
     networks:
       - aether-net
+      - internal
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
 
