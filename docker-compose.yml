@@ -23,7 +23,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.registry.rule=Host(`registry.${DOMAIN_NAME}`)"
       - "traefik.http.routers.registry.entrypoints=websecure"
-      - "traefik.http.routers.registry.tls.certresolver=cloudflare"
+      - "traefik.http.routers.registry.tls=true"
       - "traefik.http.services.registry.loadbalancer.server.port=5000"
       # Security (Authelia)
       - "traefik.http.routers.registry.middlewares=authelia@docker"
@@ -49,7 +49,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN_NAME}`)"
       - "traefik.http.routers.registry-ui.entrypoints=websecure"
-      - "traefik.http.routers.registry-ui.tls.certresolver=cloudflare"
+      - "traefik.http.routers.registry-ui.tls=true"
       - "traefik.http.services.registry-ui.loadbalancer.server.port=80"
       # Security (Authelia)
       - "traefik.http.routers.registry-ui.middlewares=authelia@docker"
