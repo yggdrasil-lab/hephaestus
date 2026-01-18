@@ -14,9 +14,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup Secrets
+        env:
+          HTPASSWD: ${{ secrets.REGISTRY_HTPASSWD }}
+        run: |
+          chmod +x scripts/ensure_secret.sh
+          echo "REGISTRY_HTPASSWD_NAME=$(echo "$HTPASSWD" | ./scripts/ensure_secret.sh registry_htpasswd)" >> $GITHUB_ENV
+
       - name: Deploy Stack
         env:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          REGISTRY_HTPASSWD_NAME: ${{ env.REGISTRY_HTPASSWD_NAME }}
         run: |
           chmod +x scripts/deploy.sh
           ./scripts/deploy.sh "hephaestus" docker-compose.yml

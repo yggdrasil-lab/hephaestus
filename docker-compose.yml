@@ -18,6 +18,13 @@ services:
         - "traefik.docker.network=aether-net"
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry
+      REGISTRY_AUTH_HTPASSWD_PATH: /run/secrets/registry_htpasswd
+      REGISTRY_AUTH_ANONYMOUS_ENABLED: "true"
+    secrets:
+      - source: registry_htpasswd
+        target: registry_htpasswd
     volumes:
       - /mnt/storage/registry:/var/lib/registry
     networks:
@@ -61,3 +68,8 @@ networks:
   internal:
     driver: overlay
     attachable: true
+
+secrets:
+  registry_htpasswd:
+    external: true
+    name: ${REGISTRY_HTPASSWD_NAME}
