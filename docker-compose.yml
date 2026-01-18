@@ -60,7 +60,7 @@ services:
       - |
         export NGINX_PROXY_USER=$$(cat /run/secrets/registry_username)
         export NGINX_PROXY_PASSWORD=$$(cat /run/secrets/registry_raw_password)
-        /entrypoint.sh
+        /docker-entrypoint.sh nginx -g 'daemon off;'
     secrets:
       - source: registry_username
         target: registry_username
