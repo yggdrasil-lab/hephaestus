@@ -17,13 +17,15 @@ To establish a self-hosted, sovereign software supply chain. I provide the Docke
 
 ## Architecture
 1.  **Registry Backend**:
+    *   **External URL**: `https://registry.<DOMAIN_NAME>`
+    *   **Public Access**: Anonymous Pulls enabled (`docker pull ...`).
+    *   **Private Access**: Push/Write operations protected by basic auth (`htpasswd`).
     *   **Internal URL**: `http://registry:5000` (Swarm Network).
-    *   **No Auth**: Configured for internal trust (Network isolation).
-    *   **Proxy**: Accessed via `registry-ui` (which acts as a reverse proxy).
 2.  **Registry UI**:
     *   **External URL**: `https://registry-ui.<DOMAIN_NAME>`
-    *   **Security**: Protected by **Authelia** (Single Sign-On).
-    *   **Function**: Acts as both UI and API Proxy (via `NGINX_PROXY_PASS_URL`).
+    *   **Public Access**: Read-Only "Library Check Mode".
+    *   **Mechanism**: The UI Container has injected credentials (`admin`) and proxies requests for the public user, allowing them to browse the catalog without logging in.
+    *   **Safety**: HTTP Methods are strictly limited to `GET`, `HEAD`, `OPTIONS` via Traefik to prevent unauthorized deletion.
 
 ## Prerequisites
 *   Docker Swarm Cluster
@@ -38,7 +40,16 @@ Ensure the storage directory exists on the host (Manager Node):
 ./setup_host.sh
 ```
 
-### 2. Deployment
+### 2. Secrets Configuration
+The following secrets must be available in GitHub Actions (or manually created):
+
+| Secret Name | Description |
+|Data |---|
+| `REGISTRY_HTPASSWD` | The contents of an `htpasswd` file (e.g., `admin:HASH`). |
+| `REGISTRY_USERNAME` | The raw username (e.g., `admin`). For the UI Proxy. |
+| `REGISTRY_RAW_PASSWORD` | The raw password (e.g., `password`). For the UI Proxy. |
+
+### 3. Deployment
 ```bash
 ./scripts/deploy.sh "hephaestus" docker-compose.yml
 ```
@@ -49,7 +60,7 @@ Ensure the storage directory exists on the host (Manager Node):
     *   *Network*: `aether-net`, `internal`.
 *   **registry-ui**: The frontend interface by `joxit`.
     *   *Network*: `aether-net`, `internal` (to reach registry).
-    *   *Auth*: Middleware `authelia@docker`.
+    *   *Auth*: Internally Authenticated Proxy (via secrets).
     *   *Proxy*: Forwards API requests to `http://registry:5000`.
 
 ## Troubleshooting
