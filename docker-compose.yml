@@ -19,7 +19,7 @@ services:
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
       REGISTRY_AUTH: htpasswd
-      REGISTRY_AUTH_HTPASSWD_REALM: Registry
+      REGISTRY_AUTH_HTPASSWD_REALM: "Registry"
       REGISTRY_AUTH_HTPASSWD_PATH: /run/secrets/registry_htpasswd
       REGISTRY_AUTH_ANONYMOUS_ENABLED: "true"
     secrets:
