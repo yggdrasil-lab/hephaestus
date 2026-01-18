@@ -33,7 +33,6 @@ services:
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
 
-
   registry-ui:
     image: joxit/docker-registry-ui:main
     deploy:
@@ -44,18 +43,29 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN_NAME}`) && Method(`GET`, `HEAD`, `OPTIONS`)"
         - "traefik.http.routers.registry-ui.entrypoints=websecure"
         - "traefik.http.routers.registry-ui.tls=true"
         - "traefik.http.services.registry-ui.loadbalancer.server.port=80"
         - "traefik.docker.network=aether-net"
-        - "traefik.http.routers.registry-ui.middlewares=authelia@docker"
     environment:
       - REGISTRY_TITLE=Hephaestus Registry
       - NGINX_PROXY_PASS_URL=http://registry:5000
       - NGINX_RESOLVER=127.0.0.11
       - SINGLE_REGISTRY=true
-      - DELETE_IMAGES=true
+      - DELETE_IMAGES=false # Hide delete button
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export NGINX_PROXY_USER=$$(cat /run/secrets/registry_username)
+        export NGINX_PROXY_PASSWORD=$$(cat /run/secrets/registry_raw_password)
+        /entrypoint.sh
+    secrets:
+      - source: registry_username
+        target: registry_username
+      - source: registry_raw_password
+        target: registry_raw_password
     networks:
       - aether-net
       - internal
@@ -73,3 +83,9 @@ secrets:
   registry_htpasswd:
     external: true
     name: ${REGISTRY_HTPASSWD_NAME}
+  registry_username:
+    external: true
+    name: ${REGISTRY_USERNAME_NAME}
+  registry_raw_password:
+    external: true
+    name: ${REGISTRY_RAW_PASSWORD_NAME}
