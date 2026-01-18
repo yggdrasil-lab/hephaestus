@@ -17,13 +17,9 @@ jobs:
       - name: Setup Secrets
         env:
           HTPASSWD: ${{ secrets.REGISTRY_HTPASSWD }}
-          USER: ${{ secrets.REGISTRY_USERNAME }}
-          PASS: ${{ secrets.REGISTRY_RAW_PASSWORD }}
         run: |
           chmod +x scripts/ensure_secret.sh
           echo "REGISTRY_HTPASSWD_NAME=$(echo "$HTPASSWD" | ./scripts/ensure_secret.sh registry_htpasswd)" >> $GITHUB_ENV
-          echo "REGISTRY_USERNAME_NAME=$(echo "$USER" | ./scripts/ensure_secret.sh registry_username)" >> $GITHUB_ENV
-          echo "REGISTRY_RAW_PASSWORD_NAME=$(echo "$PASS" | ./scripts/ensure_secret.sh registry_raw_password)" >> $GITHUB_ENV
 
       - name: Deploy Stack
         env:
