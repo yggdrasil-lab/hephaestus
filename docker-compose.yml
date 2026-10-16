@@ -9,6 +9,12 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          memory: 256M
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.registry.rule=Host(`registry.${DOMAIN_NAME}`)"
@@ -22,6 +28,8 @@ services:
       REGISTRY_AUTH_HTPASSWD_REALM: "Registry"
       REGISTRY_AUTH_HTPASSWD_PATH: /run/secrets/registry_htpasswd
       REGISTRY_AUTH_ANONYMOUS_ENABLED: "true"
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_STORAGE_CACHE_BLOBDESCRIPTOR: inmemory
     secrets:
       - source: registry_htpasswd
         target: registry_htpasswd
@@ -30,17 +38,34 @@ services:
     networks:
       - aether-net
       - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/v2/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
 
   registry-ui:
-    image: joxit/docker-registry-ui:main
+    image: joxit/docker-registry-ui:2
     deploy:
       restart_policy:
         condition: on-failure
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 64M
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.registry-ui.rule=Host(`registry-ui.${DOMAIN_NAME}`) && Method(`GET`, `HEAD`, `OPTIONS`)"
@@ -58,6 +83,17 @@ services:
     networks:
       - aether-net
       - internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
 
@@ -72,9 +108,3 @@ secrets:
   registry_htpasswd:
     external: true
     name: ${REGISTRY_HTPASSWD_NAME}
-  registry_username:
-    external: true
-    name: ${REGISTRY_USERNAME_NAME}
-  registry_raw_password:
-    external: true
-    name: ${REGISTRY_RAW_PASSWORD_NAME}

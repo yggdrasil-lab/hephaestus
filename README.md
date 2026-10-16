@@ -24,8 +24,8 @@ To establish a self-hosted, sovereign software supply chain. I provide the Docke
 2.  **Registry UI**:
     *   **External URL**: `https://registry-ui.<DOMAIN_NAME>`
     *   **Public Access**: Read-Only "Library Check Mode".
-    *   **Mechanism**: The UI Container has injected credentials (`admin`) and proxies requests for the public user, allowing them to browse the catalog without logging in.
-    *   **Safety**: HTTP Methods are strictly limited to `GET`, `HEAD`, `OPTIONS` via Traefik to prevent unauthorized deletion.
+    *   **Mechanism**: The UI proxies requests to `http://registry:5000` across the internal overlay network. Anonymous catalog read access is enabled on the registry backend (`REGISTRY_AUTH_ANONYMOUS_ENABLED: "true"`).
+    *   **Safety**: HTTP Methods are strictly limited to `GET`, `HEAD`, `OPTIONS` via Traefik to prevent unauthorized modification or deletion.
 
 ## Prerequisites
 *   Docker Swarm Cluster
@@ -41,13 +41,11 @@ Ensure the storage directory exists on the host (Manager Node):
 ```
 
 ### 2. Secrets Configuration
-The following secrets must be available in GitHub Actions (or manually created):
+The following secret must be available in GitHub Actions (or manually created in Swarm):
 
 | Secret Name | Description |
-|Data |---|
-| `REGISTRY_HTPASSWD` | The contents of an `htpasswd` file (e.g., `admin:HASH`). |
-| `REGISTRY_USERNAME` | The raw username (e.g., `admin`). For the UI Proxy. |
-| `REGISTRY_RAW_PASSWORD` | The raw password (e.g., `password`). For the UI Proxy. |
+|---|---|
+| `REGISTRY_HTPASSWD` | The contents of an `htpasswd` file (e.g., `admin:HASH`). Required for push/write authentication. |
 
 ### 3. Deployment
 ```bash
@@ -58,17 +56,23 @@ The following secrets must be available in GitHub Actions (or manually created):
 *   **registry**: The backend distribution server (v2).
     *   *Storage*: `/mnt/storage/registry` (Host Bind Mount).
     *   *Network*: `aether-net`, `internal`.
+    *   *Features*: In-memory blob descriptor cache, manifest deletion enabled.
 *   **registry-ui**: The frontend interface by `joxit`.
     *   *Network*: `aether-net`, `internal` (to reach registry).
-    *   *Auth*: Internally Authenticated Proxy (via secrets).
     *   *Proxy*: Forwards API requests to `http://registry:5000`.
 
-## Troubleshooting
+## Maintenance & Troubleshooting
+*   **Garbage Collection**:
+    Docker Registry v2 does not reclaim disk storage automatically when tags are overwritten. To prune untagged manifests and orphaned blobs:
+    ```bash
+    CID=$(docker ps -q --filter label=com.docker.swarm.service.name=hephaestus_registry)
+    docker exec "$CID" registry garbage-collect /etc/docker/registry/config.yml -m
+    ```
 *   **UI Nginx Error "host not found in upstream"**:
     *   This occurs if the internal Nginx proxy tries to resolve the `registry` hostname before the container is fully available in Swarm DNS.
     *   **Fix**: Ensure `NGINX_RESOLVER=127.0.0.11` is set in the environment variables. This forces Nginx to use the Docker embedded DNS resolver at runtime.
 *   **Pushing Images**:
-    To push images, you can still access the registry directly if you expose it, or use the internal service name `registry:5000` from within the cluster.
+    To push images, access the registry directly using your credentials:
     ```bash
     docker tag my-image registry.<DOMAIN_NAME>/my-image:latest
     docker push registry.<DOMAIN_NAME>/my-image:latest
