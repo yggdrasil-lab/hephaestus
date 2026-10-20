@@ -30,14 +30,13 @@ To establish a self-hosted, sovereign software supply chain. I provide the Docke
 ## Prerequisites
 *   Docker Swarm Cluster
 *   Traefik Proxy (External) & Authelia
-*   `ops-scripts` submodule initialized.
 
 ## Setup Instructions
 
 ### 1. Host Preparation
-Ensure the storage directory exists on the host (Manager Node):
+Provision the host storage directory (`/mnt/storage/registry`) on the Manager Node (Gaia) via `yggdrasil-os`:
 ```bash
-./setup_host.sh
+curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/hosts/setup_gaia.sh | sudo bash
 ```
 
 ### 2. Secrets Configuration
@@ -48,8 +47,11 @@ The following secret must be available in GitHub Actions (or manually created in
 | `REGISTRY_HTPASSWD` | The contents of an `htpasswd` file (e.g., `admin:HASH`). Required for push/write authentication. |
 
 ### 3. Deployment
+Stack deployment is managed automatically via GitHub Actions CI/CD on pushes to `main`. To deploy manually using centralized `yggdrasil-os` tooling:
 ```bash
-./scripts/deploy.sh "hephaestus" docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/deploy.sh -o /tmp/deploy.sh
+chmod +x /tmp/deploy.sh
+/tmp/deploy.sh "hephaestus" docker-compose.yml
 ```
 
 ## Services
