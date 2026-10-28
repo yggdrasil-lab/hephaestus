@@ -17,6 +17,10 @@ jobs:
         env:
           HTPASSWD: ${{ secrets.REGISTRY_HTPASSWD }}
         run: |
+          if [ -z "${HTPASSWD}" ]; then
+            echo "Error: REGISTRY_HTPASSWD secret is required" >&2
+            exit 1
+          fi
           curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/ensure_secret.sh -o /tmp/ensure_secret.sh
           chmod +x /tmp/ensure_secret.sh
           echo "REGISTRY_HTPASSWD_NAME=$(echo "$HTPASSWD" | /tmp/ensure_secret.sh registry_htpasswd)" >> $GITHUB_ENV
