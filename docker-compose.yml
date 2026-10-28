@@ -46,6 +46,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
 
   registry-ui:
     image: joxit/docker-registry-ui:2
@@ -89,6 +91,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
 
 networks:
   aether-net:
