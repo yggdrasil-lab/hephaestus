@@ -13,14 +13,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate Required Configuration
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          REGISTRY_HTTP_SECRET: ${{ secrets.REGISTRY_HTTP_SECRET }}
+        run: |
+          MISSING=""
+          [ -z "$DOMAIN_NAME" ] && MISSING="$MISSING DOMAIN_NAME"
+          [ -z "$REGISTRY_HTTP_SECRET" ] && MISSING="$MISSING REGISTRY_HTTP_SECRET"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Deployment halted: missing required configuration:$MISSING" >&2
+            exit 1
+          fi
+
       - name: Setup Secrets
         env:
           HTPASSWD: ${{ secrets.REGISTRY_HTPASSWD }}
         run: |
-          if [ -z "${HTPASSWD}" ]; then
-            echo "Error: REGISTRY_HTPASSWD secret is required" >&2
-            exit 1
-          fi
           curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/ensure_secret.sh -o /tmp/ensure_secret.sh
           chmod +x /tmp/ensure_secret.sh
           echo "REGISTRY_HTPASSWD_NAME=$(echo "$HTPASSWD" | /tmp/ensure_secret.sh registry_htpasswd)" >> $GITHUB_ENV
