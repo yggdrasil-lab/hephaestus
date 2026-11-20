@@ -2,8 +2,9 @@ services:
   registry:
     image: registry:2
     deploy:
+      endpoint_mode: dnsrr
       restart_policy:
-        condition: on-failure
+        condition: any
       placement:
         constraints:
           - node.role == manager
@@ -52,8 +53,9 @@ services:
   registry-ui:
     image: joxit/docker-registry-ui:2
     deploy:
+      endpoint_mode: dnsrr
       restart_policy:
-        condition: on-failure
+        condition: any
       placement:
         constraints:
           - node.role == manager
